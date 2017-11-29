@@ -23,7 +23,26 @@ defmodule Graph.Priorityqueue do
     end
   end
 
-  def pop(pq) do
+  def pop(%__MODULE__{entries: e} = pq) do
+    {skey, _} = find_smallest(pq, Map.keys(e), %{key: nil, value: 2092013})
+    pq = %__MODULE__{pq | entries: Map.delete(e, skey)}
+    {pq, skey, Map.get(e, skey)}
+  end
+
+  defp find_smallest(%__MODULE__{}, [], smallest) do
+    {Map.get(smallest, :key), Map.get(smallest, :value)}
+  end
+  defp find_smallest(%__MODULE__{entries: e} = pq, [h | t], smallest) do
+    with entry <- Map.get(e, h) do
+      ct = Map.get(entry, :costs_to)
+      ch = Map.get(entry, :costs_heur)
+      total = ct + ch
+      if total < Map.get(smallest, :value) do
+        find_smallest(pq, t, %{key: h, value: total})
+      else
+        find_smallest(pq, t, smallest)
+      end
+    end
   end
 
 end

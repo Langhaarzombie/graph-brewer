@@ -9,7 +9,7 @@ defmodule Graph do
   @type label :: term
   @type t :: %__MODULE__{
     nodes: %{node_id => %{label: label, costs: costs}},
-    edges: %{node_id => %{to: node_id, costs: costs}}
+    edges: %{node_id => %{to: node_id, costs: costs}} # TODO type is no longer correct
   }
 
   # NOTE This module only serves as a library for undirected graphs!
@@ -39,6 +39,45 @@ defmodule Graph do
     g
   end
 
+  def delete_edge(%__MODULE__{edges: e} = g, from, to) do
+    with  fe <- Map.get(e, from),
+          te <- Map.get(e, to) do
+          #g = %__MODULE__{g | edges: %{from => MapSet.delete(ef, do_delete_edge(MapSet.to_list(ef), to))}}
+          #%__MODULE__{g | edges: MapSet.delete(tf, do_delete_edge(MapSet.to_list(tf), from))}}
+      fe_new = MapSet.delete(fe, find_edge(MapSet.to_list(fe), to))
+      te_new = MapSet.delete(te, find_edge(MapSet.to_list(te), from))
+
+      e = e
+        |> Map.delete(from)
+        |> Map.delete(to)
+        |> Map.put(from, fe_new)
+        |> Map.put(to, te_new)
+
+      %__MODULE__{g | edges: e}
+    end
+  end
+  defp find_edge([], to) do
+    nil
+  end
+  defp find_edge([h | t], to) do
+    if Map.get(h, :to) == to do
+      h
+    else
+      find_edge(t, to)
+    end
+  end
+  # TODO maybe delete below
+  defp out_edges(%__MODULE__{edges: e}, node) do
+    edges = MapSet.to_list(Map.get(e, node))
+    extract_nodes(edges)
+  end
+  defp extract_nodes([h | []]) do
+    [Map.get(h, :to)]
+  end
+  defp extract_nodes([h | t]) do
+    [Map.get(h, :to)] ++ extract_nodes(t)
+  end
+
   def add_node(%__MODULE__{nodes: n} = g, node) when is_atom(node) do
     case Map.get(n, node) do
       nil ->
@@ -59,7 +98,7 @@ defmodule Graph do
   def shortest_path(%__MODULE__{nodes: n, edges: e} = g, from, to) when is_atom(from) and is_atom(to) do
     processed = %{}
     pq = Graph.Priorityqueue.new
-    pq = Graph.Priorityqueue.push(pq, from, %{costs_to: 0, costs_hop: 0, costs_heur: 0, from: nil})
+      |> Graph.Priorityqueue.push(from, %{costs_to: 0, costs_hop: 0, costs_heur: 0, from: nil})
     do_shortest_path(g, from, to, pq, processed)
   end
 
@@ -69,6 +108,7 @@ defmodule Graph do
         processed = Map.put(processed, to, data)
         construct_path(processed, from, to)
       {pq, id, data} ->
+        IO.puts "Evaluating: From #{id}"
         processed = Map.put(processed, id, data)
         neighbors = filter(MapSet.to_list(Map.get(e, id)), processed)
         insert_pq(g, pq, neighbors, Map.merge(%{key: id}, data))
@@ -90,6 +130,9 @@ defmodule Graph do
     Enum.filter(n, fn x -> !(Enum.member?(pkeys, Map.get(x, :to))) end)
   end
 
+  defp insert_pq(%__MODULE__{edges: e, nodes: n} = g, pq, [], previous) do
+    pq
+  end
   defp insert_pq(%__MODULE__{edges: e, nodes: n} = g, pq, [h | []], previous) do
     with id   <- Map.get(h, :to),
          node <- Map.get(n, id) do

@@ -19,6 +19,8 @@ defmodule Graph.Priorityqueue do
       entry ->
         if Map.get(entry, :costs_to) > cto do
           %__MODULE__{pq | entries: Map.put(e, node, prop)}
+        else
+          pq
         end
     end
   end

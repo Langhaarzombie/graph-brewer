@@ -75,7 +75,11 @@ defmodule Graph do
     if is_list(pq) do
       Enum.reverse(pq) # because for some reason the path is constructed is the other way around
     else
-      do_shortes_path(g, from, to, pq, processed)
+      try do
+        do_shortes_path(g, from, to, pq, processed)
+      rescue
+        FunctionClauseError -> Log.error "Could not find path from #{from} to #{to}!!"
+      end
     end
   end
 
@@ -91,7 +95,6 @@ defmodule Graph do
       costs_hop = Map.get(h, :costs)
       costs_heur = Map.get(node, :costs)
       costs_to = Map.get(previous, :costs_to) + costs_hop
-      IO.puts "First insert: #{id}, #{costs_to}"
       Graph.Priorityqueue.push(pq, id, %{costs_to: costs_to, costs_hop: costs_hop, costs_heur: costs_heur, from: Map.get(previous, :key)})
     end
   end
@@ -101,7 +104,6 @@ defmodule Graph do
       costs_hop = Map.get(h, :costs)
       costs_heur = Map.get(node, :costs)
       costs_to = Map.get(previous, :costs_to) + costs_hop
-      IO.puts "Insert: #{id}, #{costs_to}"
       Graph.Priorityqueue.push(insert_pq(g, pq, t, previous), id, %{costs_to: costs_to, costs_hop: costs_hop, costs_heur: costs_heur, from: Map.get(previous, :key)})
     end
   end

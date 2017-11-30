@@ -55,14 +55,14 @@ defmodule Graph do
     %__MODULE__{g | nodes: Map.delete(n, node)}
   end
 
-  def shortes_path(%__MODULE__{nodes: n, edges: e} = g, from, to) when is_atom(from) and is_atom(to) do
+  def shortest_path(%__MODULE__{nodes: n, edges: e} = g, from, to) when is_atom(from) and is_atom(to) do
     processed = %{}
     pq = Graph.Priorityqueue.new
     pq = Graph.Priorityqueue.push(pq, from, %{costs_to: 0, costs_hop: 0, costs_heur: 0, from: nil})
-    do_shortes_path(g, from, to, pq, processed)
+    do_shortest_path(g, from, to, pq, processed)
   end
 
-  def do_shortes_path(%__MODULE__{nodes: n, edges: e} = g, from, to, pq, processed) do
+  defp do_shortest_path(%__MODULE__{nodes: n, edges: e} = g, from, to, pq, processed) do
     pq = case Graph.Priorityqueue.pop(pq) do
       {pq, ^to, data} ->
         processed = Map.put(processed, to, data)
@@ -76,7 +76,7 @@ defmodule Graph do
       Enum.reverse(pq) # because for some reason the path is constructed is the other way around
     else
       try do
-        do_shortes_path(g, from, to, pq, processed)
+        do_shortest_path(g, from, to, pq, processed)
       rescue
         FunctionClauseError -> Log.error "Could not find path from #{from} to #{to}!!"
       end

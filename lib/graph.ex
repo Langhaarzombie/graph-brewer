@@ -1,4 +1,5 @@
 defmodule Graph do
+  require Logger
 
   defstruct nodes: %{}, edges: %{}
 
@@ -78,7 +79,7 @@ defmodule Graph do
       try do
         do_shortest_path(g, from, to, pq, processed)
       rescue
-        FunctionClauseError -> Log.error "Could not find path from #{from} to #{to}!!"
+        FunctionClauseError -> Logger.error "Could not find path from #{from} to #{to}!!"
       end
     end
   end

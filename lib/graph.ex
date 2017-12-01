@@ -1,20 +1,33 @@
 defmodule Graph do
+  @moduledoc"""
+  This module serves as a graph library that enables to handle undirected graphs (directed is in the works) in memory.
+  It features simple operations as stated below and also includes a shortest path calculation.
+
+  Supported features:
+
+  - `Nodes` with an optional heuristic `costs` (for the shortest path algorithm) and and optional `label`
+  - `Edges` from and to nodes with certain `costs`
+  - Adding and deleting `nodes`
+  - Adding and deleting `edges`
+
+  The `Graph` module is strucutred like so:
+
+  - `nodes` is a `Map` that has the node_id (atom) as a key and another `Map` as value. This `Map` conatins `label` and `costs` as keys that refer to the corresponding value.
+  - `edges` is a `Map` that has the node_id (atom) as a key and a `MapSet` as value. The `MapSet` contains `Maps` which store the information of the `edge`. The key `to` points to the `node` the adge is connecting and the key `costs` points to the assigned costs of the edge.
+  """
+
   require Logger
 
   defstruct nodes: %{}, edges: %{}
 
   @type node_id :: atom
-  @type edge_id :: {node_id, node_id}
   @type costs :: non_neg_integer
   @type label :: term
+  @type edge_info :: %{to: node_id, costs: costs}
   @type t :: %__MODULE__{
     nodes: %{node_id => %{label: label, costs: costs}},
-    edges: %{node_id => %{to: node_id, costs: costs}} # TODO type is no longer correct
+    edges: %{node_id => MapSet.t(edge_info)}
   }
-
-  # NOTE This module only serves as a library for undirected graphs!
-  # Nodes is defined as %{key(atom) => %{label => "string", hcosts => int}}
-  # Edges is defined as %{{from(atom), to(atom)} => costs(int)}
 
   def new, do: %__MODULE__{}
 
@@ -22,21 +35,21 @@ defmodule Graph do
     g = g
       |> add_node(from)
       |> add_node(to)
-      #%__MODULE__{g | edges: Map.put(e, from, %{to: to, costs: costs})}
+
     g = case Map.get(e, from) do
       nil ->
         %__MODULE__{g | edges: Map.put(e, from, MapSet.put(MapSet.new, %{to: to, costs: costs}))}
       _ ->
         %__MODULE__{g | edges: Map.put(e, from, MapSet.put(Map.get(e, from), %{to: to, costs: costs}))}
     end
+
     e = g.edges
-    g = case Map.get(e, to) do
+    case Map.get(e, to) do
       nil ->
         %__MODULE__{g | edges: Map.put(e, to, MapSet.put(MapSet.new, %{to: from, costs: costs}))}
       _ ->
         %__MODULE__{g | edges: Map.put(e, to, MapSet.put(Map.get(e, to), %{to: from, costs: costs}))}
     end
-    g
   end
 
   def delete_edge(%__MODULE__{edges: e} = g, from, to) do

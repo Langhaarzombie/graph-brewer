@@ -29,8 +29,23 @@ defmodule Graph do
     edges: %{node_id => MapSet.t(edge_info)}
   }
 
+  @doc"""
+  Creates a new undirected Graph.
+  """
   def new, do: %__MODULE__{}
 
+  @doc"""
+  Adds an edge to the given graph from a to b & b to a and assigns the according costs. If the nodes a and / or b do not exist they are created (costs and label of these nodes is set to nil).
+
+  ## Example
+
+  iex> g = Graph.new |> Graph.add_edge(:a, :b, 5)
+  %Graph{
+    edges: %{a: #MapSet<[%{costs: 5, to: :b}]>, b: #MapSet<[%{costs: 5, to: :a}]>},
+    nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}}
+  }
+  """
+  @spec add_edge(t, node_id, node_id, costs) :: t
   def add_edge(%__MODULE__{nodes: n, edges: e} = g, from, to, costs) when is_atom(from) and is_atom(to) do
     g = g
       |> add_node(from)
@@ -52,6 +67,22 @@ defmodule Graph do
     end
   end
 
+  @doc"""
+  Deletes an the edge that goes from a to b. The edge is only deleted if it really exists. Isolated nodes are of course not deleted.
+
+  ## Example
+  iex> g = Graph.new |> Graph.add_edge(:a, :b, 5) |> Graph.add_edge(:b, :c, 5)
+  %Graph{
+    edges: %{a: #MapSet<[%{costs: 5, to: :b}]>, b: #MapSet<[%{costs: 5, to: :a}, %{costs: 5, to: :c}]>, c: #MapSet<[%{costs: 5, to: :b}]>},
+    nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}, c: %{costs: 0, label: nil}}
+  }
+  iex> g = Graph.delete_edge(g, :b, :c)
+  %Graph{
+    edges: %{a: #MapSet<[%{costs: 5, to: :b}]>, b: #MapSet<[%{costs: 5, to: :a}]>, c: #MapSet<[]>},
+    nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}, c: %{costs: 0, label: nil}}
+   }
+  """
+  @spec delete_edge(t, node_id, node_id) :: t
   def delete_edge(%__MODULE__{edges: e} = g, from, to) do
     with  fe <- Map.get(e, from),
           te <- Map.get(e, to) do
@@ -79,18 +110,14 @@ defmodule Graph do
       find_edge(t, to)
     end
   end
-  # TODO maybe delete below
-  defp out_edges(%__MODULE__{edges: e}, node) do
-    edges = MapSet.to_list(Map.get(e, node))
-    extract_nodes(edges)
-  end
-  defp extract_nodes([h | []]) do
-    [Map.get(h, :to)]
-  end
-  defp extract_nodes([h | t]) do
-    [Map.get(h, :to)] ++ extract_nodes(t)
-  end
 
+  @doc"""
+  Adds a node to the graph without any further info.
+
+  ## Example
+  iex> g = Graph.new |> Graph.add_node(:a)
+  %Graph{edges: %{}, nodes: %{a: %{costs: 0, label: nil}}}
+  """
   def add_node(%__MODULE__{nodes: n} = g, node) when is_atom(node) do
     case Map.get(n, node) do
       nil ->
@@ -100,6 +127,13 @@ defmodule Graph do
     end
   end
 
+  @doc"""
+  Adds a node to the graph with the specified information.
+
+  ## Example
+  iex> g = Graph.new |> Graph.add_node(:a, %{label: "This is a", costs: 2})
+  %Graph{edges: %{}, nodes: %{a: %{costs: 2, label: "This is a"}}}
+  """
   def add_node(%__MODULE__{nodes: n} = g, node, opts) when is_atom(node) and is_map(opts) do
     %__MODULE__{g | nodes: Map.put(n, node, %{label: Map.get(opts, :label), costs: Map.get(opts, :costs)})}
   end
@@ -108,20 +142,31 @@ defmodule Graph do
     %__MODULE__{g | nodes: Map.delete(n, node)}
   end
 
+  @doc"""
+  Find the shortest path from a to b in the given graph.
+
+  iex> g = Graph.new |>
+  ...> Graph.add_edge(:s, :a, 3)  |>
+  ...> Graph.add_edge(:a, :b, 5)  |>
+  ...> Graph.add_edge(:b, :c, 10) |>
+  ...> Graph.add_edge(:c, :d, 3)  |>
+  ...> Graph.add_edge(:d, :e, 4)  |>
+  ...> Graph.add_edge(:b, :e, 5)  |>
+  ...> Graph.shortest_path(:s, :e)
+  [:s, :a, :b, :e]
+  """
   def shortest_path(%__MODULE__{nodes: n, edges: e} = g, from, to) when is_atom(from) and is_atom(to) do
     processed = %{}
     pq = Graph.Priorityqueue.new
       |> Graph.Priorityqueue.push(from, %{costs_to: 0, costs_hop: 0, costs_heur: 0, from: nil})
     do_shortest_path(g, from, to, pq, processed)
   end
-
   defp do_shortest_path(%__MODULE__{nodes: n, edges: e} = g, from, to, pq, processed) do
     pq = case Graph.Priorityqueue.pop(pq) do
       {pq, ^to, data} ->
         processed = Map.put(processed, to, data)
         construct_path(processed, from, to)
       {pq, id, data} ->
-        IO.puts "Evaluating: From #{id}"
         processed = Map.put(processed, id, data)
         neighbors = filter(MapSet.to_list(Map.get(e, id)), processed)
         insert_pq(g, pq, neighbors, Map.merge(%{key: id}, data))
@@ -136,13 +181,10 @@ defmodule Graph do
       end
     end
   end
-
-  # n ... neighbors, p ... processed, there must not be any nodes on neighbors which are also in processed
   defp filter(n, p) do
     pkeys = Map.keys(p)
     Enum.filter(n, fn x -> !(Enum.member?(pkeys, Map.get(x, :to))) end)
   end
-
   defp insert_pq(%__MODULE__{edges: e, nodes: n} = g, pq, [], previous) do
     pq
   end
@@ -164,8 +206,6 @@ defmodule Graph do
       Graph.Priorityqueue.push(insert_pq(g, pq, t, previous), id, %{costs_to: costs_to, costs_hop: costs_hop, costs_heur: costs_heur, from: Map.get(previous, :key)})
     end
   end
-
-  # from is the initial target and to is where we started
   defp construct_path(processed, from, to) do
     if from == to do
       [to]

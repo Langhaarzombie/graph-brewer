@@ -1,5 +1,5 @@
 defmodule Testsetup do
-  @docmodule"""
+  @moduledoc"""
   This module is used for quick and easy testing of the different functions. Feel free to edit it.
   """
   @doc"""

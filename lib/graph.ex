@@ -30,6 +30,7 @@ defmodule Graph do
   @doc"""
   Creates a new undirected Graph.
   """
+  @spec new :: t
   def new, do: %__MODULE__{}
 
   @doc"""

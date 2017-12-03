@@ -30,7 +30,8 @@ defmodule Priorityqueue do
   iex> pq = Priorityqueue.new |> Priorityqueue.push(:a, %{costs_to: 15, costs_hop: 3, costs_heur: 4, from: :s})
   %Priorityqueue{entries: %{a: %{costs_heur: 4, costs_hop: 3, costs_to: 15, from: :s}}}
   """
-  def push(%__MODULE__{entries: e} = pq, node, %{costs_to: cto, costs_hop: chop, costs_heur: cheu, from: from} = prop) when is_atom(node) and is_atom(from) do
+  @spec push(t, key, %{costs_to: path_costs, costs_hop: path_costs, costs_heur: heuristic_costs, from: key}) :: t
+  def push(%__MODULE__{entries: e} = pq, node, %{costs_to: cto, costs_hop: _, costs_heur: _, from: from} = prop) when is_atom(node) and is_atom(from) do
     case Map.get(e, node) do
       nil ->
         %__MODULE__{pq | entries: Map.put(e, node, prop)}
@@ -51,12 +52,12 @@ defmodule Priorityqueue do
   ...> Priorityqueue.pop
   {%Priorityqueue{entries: %{a: %{costs_heur: 4, costs_hop: 3, costs_to: 15, from: :s}}}, :b, %{costs_heur: 3, costs_hop: 4, costs_to: 10, from: :s}}
   """
+  @spec pop(t) :: {t, key, %{costs_heur: heuristic_costs, costs_hop: path_costs, costs_to: path_costs, from: key}}
   def pop(%__MODULE__{entries: e} = pq) do
     {skey, _} = find_smallest(pq, Map.keys(e), %{key: nil, value: 2092013})
     pq = %__MODULE__{pq | entries: Map.delete(e, skey)}
     {pq, skey, Map.get(e, skey)}
   end
-
   defp find_smallest(%__MODULE__{}, [], smallest) do
     {Map.get(smallest, :key), Map.get(smallest, :value)}
   end

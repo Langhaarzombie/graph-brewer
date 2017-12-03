@@ -45,7 +45,7 @@ defmodule Graph do
   }
   """
   @spec add_edge(t, node_id, node_id, costs) :: t
-  def add_edge(%__MODULE__{nodes: n, edges: e} = g, from, to, costs) when is_atom(from) and is_atom(to) do
+  def add_edge(%__MODULE__{edges: e} = g, from, to, costs) when is_atom(from) and is_atom(to) do
     g = g
       |> add_node(from)
       |> add_node(to)
@@ -99,7 +99,7 @@ defmodule Graph do
       %__MODULE__{g | edges: e}
     end
   end
-  defp find_edge([], to) do
+  defp find_edge([], _) do
     nil
   end
   defp find_edge([h | t], to) do
@@ -154,15 +154,15 @@ defmodule Graph do
   ...> Graph.shortest_path(:s, :e)
   [:s, :a, :b, :e]
   """
-  def shortest_path(%__MODULE__{nodes: n, edges: e} = g, from, to) when is_atom(from) and is_atom(to) do
+  def shortest_path(%__MODULE__{} = g, from, to) when is_atom(from) and is_atom(to) do
     processed = %{}
     pq = Priorityqueue.new
       |> Priorityqueue.push(from, %{costs_to: 0, costs_hop: 0, costs_heur: 0, from: nil})
     do_shortest_path(g, from, to, pq, processed)
   end
-  defp do_shortest_path(%__MODULE__{nodes: n, edges: e} = g, from, to, pq, processed) do
+  defp do_shortest_path(%__MODULE__{edges: e} = g, from, to, pq, processed) do
     pq = case Priorityqueue.pop(pq) do
-      {pq, ^to, data} ->
+      {_, ^to, data} ->
         processed = Map.put(processed, to, data)
         construct_path(processed, from, to)
       {pq, id, data} ->
@@ -184,10 +184,10 @@ defmodule Graph do
     pkeys = Map.keys(p)
     Enum.filter(n, fn x -> !(Enum.member?(pkeys, Map.get(x, :to))) end)
   end
-  defp insert_pq(%__MODULE__{edges: e, nodes: n} = g, pq, [], previous) do
+  defp insert_pq(_, pq, [], _) do
     pq
   end
-  defp insert_pq(%__MODULE__{edges: e, nodes: n} = g, pq, [h | []], previous) do
+  defp insert_pq(%__MODULE__{nodes: n}, pq, [h | []], previous) do
     with id   <- Map.get(h, :to),
          node <- Map.get(n, id) do
       costs_hop = Map.get(h, :costs)
@@ -196,7 +196,7 @@ defmodule Graph do
       Priorityqueue.push(pq, id, %{costs_to: costs_to, costs_hop: costs_hop, costs_heur: costs_heur, from: Map.get(previous, :key)})
     end
   end
-  defp insert_pq(%__MODULE__{edges: e, nodes: n} = g, pq, [h | t], previous) do
+  defp insert_pq(%__MODULE__{nodes: n} = g, pq, [h | t], previous) do
     with  id    <- Map.get(h, :to),
           node  <- Map.get(n, id) do
       costs_hop = Map.get(h, :costs)

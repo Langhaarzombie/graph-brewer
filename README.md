@@ -1,21 +1,20 @@
-# Graph
+# graph-brewer
 
-**TODO: Add description**
+This library enables you to easily create and manage undirected graphs in Elixir.
+Features include adding and removing nodes, adding and removing edges and finding the shortes path from one node to another.
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `graph` to your list of dependencies in `mix.exs`:
+Graph-brewer is [available in Hex](https://hex.pm/docs/publish), the package can be installed
+by adding `graphbrewer` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:graph, "~> 0.1.0"}
+    {:graphbrewer, "~> 0.1.0"}
   ]
 end
 ```
 
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/graph](https://hexdocs.pm/graph).
+For more information look at the documentation on [HexDocs](https://hexdocs.pm).
 

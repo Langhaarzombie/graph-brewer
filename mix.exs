@@ -25,7 +25,7 @@ defmodule Graph.Mixfile do
     [file: ["lib", "mix.exs", "README.md", "LICENSE"],
      maintainers: ["Maximilian Meyer-Mölleringhof"],
      license: ["MIT"],
-     links: {GitHub: "https://github.com/Langhaarzombie/graph-brewer"}]
+     links: %{GitHub: "https://github.com/Langhaarzombie/graph-brewer"}]
   end
 
 end

@@ -156,12 +156,12 @@ defmodule Graph do
   """
   def shortest_path(%__MODULE__{nodes: n, edges: e} = g, from, to) when is_atom(from) and is_atom(to) do
     processed = %{}
-    pq = Graph.Priorityqueue.new
-      |> Graph.Priorityqueue.push(from, %{costs_to: 0, costs_hop: 0, costs_heur: 0, from: nil})
+    pq = Priorityqueue.new
+      |> Priorityqueue.push(from, %{costs_to: 0, costs_hop: 0, costs_heur: 0, from: nil})
     do_shortest_path(g, from, to, pq, processed)
   end
   defp do_shortest_path(%__MODULE__{nodes: n, edges: e} = g, from, to, pq, processed) do
-    pq = case Graph.Priorityqueue.pop(pq) do
+    pq = case Priorityqueue.pop(pq) do
       {pq, ^to, data} ->
         processed = Map.put(processed, to, data)
         construct_path(processed, from, to)
@@ -193,7 +193,7 @@ defmodule Graph do
       costs_hop = Map.get(h, :costs)
       costs_heur = Map.get(node, :costs)
       costs_to = Map.get(previous, :costs_to) + costs_hop
-      Graph.Priorityqueue.push(pq, id, %{costs_to: costs_to, costs_hop: costs_hop, costs_heur: costs_heur, from: Map.get(previous, :key)})
+      Priorityqueue.push(pq, id, %{costs_to: costs_to, costs_hop: costs_hop, costs_heur: costs_heur, from: Map.get(previous, :key)})
     end
   end
   defp insert_pq(%__MODULE__{edges: e, nodes: n} = g, pq, [h | t], previous) do
@@ -202,7 +202,7 @@ defmodule Graph do
       costs_hop = Map.get(h, :costs)
       costs_heur = Map.get(node, :costs)
       costs_to = Map.get(previous, :costs_to) + costs_hop
-      Graph.Priorityqueue.push(insert_pq(g, pq, t, previous), id, %{costs_to: costs_to, costs_hop: costs_hop, costs_heur: costs_heur, from: Map.get(previous, :key)})
+      Priorityqueue.push(insert_pq(g, pq, t, previous), id, %{costs_to: costs_to, costs_hop: costs_hop, costs_heur: costs_heur, from: Map.get(previous, :key)})
     end
   end
   defp construct_path(processed, from, to) do

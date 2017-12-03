@@ -17,7 +17,7 @@ defmodule Graph.Mixfile do
   def application, do: [extra_applications: []]
 
   defp deps do
-    []
+    [{:ex_doc, "~> 0.16", only: :dev}]
   end
 
   defp description, do: "A (working) graph library for Elixir"

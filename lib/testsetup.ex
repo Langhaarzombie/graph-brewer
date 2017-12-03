@@ -1,4 +1,10 @@
-defmodule Graph.Testsetup do
+defmodule Testsetup do
+  @docmodule"""
+  This module is used for quick and easy testing of the different functions. Feel free to edit it.
+  """
+  @doc"""
+  Returns a rather small but complete graph for operation testing.
+  """
   def getSmallGraph do
     graph = Graph.new
 
@@ -31,6 +37,9 @@ defmodule Graph.Testsetup do
     graph
   end
 
+  @doc"""
+  Returns a bigger graph that is a bit more complicated. Can be used for performance tests.
+  """
   def getGraph do
     # Costs are measured in 10m -> 250m == costs 25
     state = Graph.new

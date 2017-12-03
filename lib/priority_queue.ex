@@ -1,5 +1,9 @@
-defmodule Graph.Priorityqueue do
+defmodule Priorityqueue do
 
+  @docmodule """
+  The prioriy queue is used by the shortest path algorithm of the `Graph` module. It keeps all the nodes that are to be evaluated and determines which node is to evaluated next.
+  As the name suggests it works as a queue. So the main methods are `push` for adding an entry and `pop` for getting the next one.
+  """
   defstruct entries: %{}
 
   @type key :: atom
@@ -10,8 +14,22 @@ defmodule Graph.Priorityqueue do
     entries: %{key => %{pcosts: path_costs, hcosts: heuristic_costs, tcosts: total_costs}}
   }
 
+  @doc"""
+  Returns a new struct of `PriorityQueue` with zero entries.
+
+  iex(15)> Priorityqueue.new
+  %Priorityqueue{entries: %{}}
+  """
+  @spec new :: t
   def new, do: %__MODULE__{}
 
+  @doc"""
+  Adds a new entry to an existing priority queue. The entry must contain the path costs to the node, the costs of the latest hop to the node, the heuristic costs of the node and the node from which the added one is reached (needed for reconstructing the path later on).
+
+  ## Example
+  iex> pq = Priorityqueue.new |> Priorityqueue.push(:a, %{costs_to: 15, costs_hop: 3, costs_heur: 4, from: :s})
+  %Priorityqueue{entries: %{a: %{costs_heur: 4, costs_hop: 3, costs_to: 15, from: :s}}}
+  """
   def push(%__MODULE__{entries: e} = pq, node, %{costs_to: cto, costs_hop: chop, costs_heur: cheu, from: from} = prop) when is_atom(node) and is_atom(from) do
     case Map.get(e, node) do
       nil ->
@@ -25,6 +43,14 @@ defmodule Graph.Priorityqueue do
     end
   end
 
+  @doc"""
+  Returns the next item in the queue. As the shortest path algorithm uses the principle of the a star algorithm, the queue returns the element with the lowest costs. In detail, the function returns the updated priority queue, the key (the node) of the element to be evaluated next and the data of that element.
+
+  ## Example
+  iex> Priorityqueue.new |> Priorityqueue.push(:a, %{costs_to: 15, costs_hop: 3, costs_heur: 4, from: :s}) |> Priorityqueue.push(:b, %{costs_to: 10, costs_hop: 4, costs_heur: 3, from: :s}) |>
+  ...> Priorityqueue.pop
+  {%Priorityqueue{entries: %{a: %{costs_heur: 4, costs_hop: 3, costs_to: 15, from: :s}}}, :b, %{costs_heur: 3, costs_hop: 4, costs_to: 10, from: :s}}
+  """
   def pop(%__MODULE__{entries: e} = pq) do
     {skey, _} = find_smallest(pq, Map.keys(e), %{key: nil, value: 2092013})
     pq = %__MODULE__{pq | entries: Map.delete(e, skey)}

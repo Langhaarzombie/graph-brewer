@@ -5,7 +5,7 @@ Features include adding and removing nodes, adding and removing edges and findin
 
 ## Installation
 
-Graph-brewer is [available in Hex](https://hexdocs.pm/graphbrewe://hexdocs.pm/graphbrewer) the package can be installed
+Graph-brewer is [available in Hex](https://hexdocs.pm/graphbrewer) the package can be installed
 by adding `graphbrewer` to your list of dependencies in `mix.exs`:
 
 ```elixir
@@ -16,7 +16,7 @@ def deps do
 end
 ```
 
-For more information look at the documentation on [HexDocs](https://hexdocs.pm/graphbrewe://hexdocs.pm/graphbrewer).
+For more information look at the documentation on [HexDocs](https://hexdocs.pm/graphbrewer).
 
 ## Things to come
 

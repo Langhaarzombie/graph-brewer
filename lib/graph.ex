@@ -1,7 +1,7 @@
 defmodule Graph do
   @moduledoc"""
-  This module serves as a graph library that enables to handle undirected graphs (directed is in the works) in memory.
-  It features simple operations as stated below and also includes a shortest path calculation.
+  This module serves as a graph library that enables to handle undirected weighted graphs (directed is in the works) in memory.
+  It features simple operations such as adding and removing `nodes` and `edges` and finding the shortest path between nodes.
 
   Supported features:
 

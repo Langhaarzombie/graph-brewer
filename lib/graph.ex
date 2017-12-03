@@ -38,11 +38,11 @@ defmodule Graph do
 
   ## Example
 
-  iex> g = Graph.new |> Graph.add_edge(:a, :b, 5)
-  %Graph{
-    edges: %{a: #MapSet<[%{costs: 5, to: :b}]>, b: #MapSet<[%{costs: 5, to: :a}]>},
-    nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}}
-  }
+      iex> g = Graph.new |> Graph.add_edge(:a, :b, 5)
+      %Graph {
+        edges: %{a: %MapSet<[%{costs: 5, to: :b}]>, b: %MapSet<[%{costs: 5, to: :a}]>},
+        nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}}
+      }
   """
   @spec add_edge(t, node_id, node_id, costs) :: t
   def add_edge(%__MODULE__{edges: e} = g, from, to, costs) when is_atom(from) and is_atom(to) do
@@ -70,16 +70,17 @@ defmodule Graph do
   Deletes an the edge that goes from a to b. The edge is only deleted if it really exists. Isolated nodes are of course not deleted.
 
   ## Example
-  iex> g = Graph.new |> Graph.add_edge(:a, :b, 5) |> Graph.add_edge(:b, :c, 5)
-  %Graph{
-    edges: %{a: #MapSet<[%{costs: 5, to: :b}]>, b: #MapSet<[%{costs: 5, to: :a}, %{costs: 5, to: :c}]>, c: #MapSet<[%{costs: 5, to: :b}]>},
-    nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}, c: %{costs: 0, label: nil}}
-  }
-  iex> g = Graph.delete_edge(g, :b, :c)
-  %Graph{
-    edges: %{a: #MapSet<[%{costs: 5, to: :b}]>, b: #MapSet<[%{costs: 5, to: :a}]>, c: #MapSet<[]>},
-    nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}, c: %{costs: 0, label: nil}}
-   }
+
+      iex> g = Graph.new |> Graph.add_edge(:a, :b, 5) |> Graph.add_edge(:b, :c, 5)
+      %Graph {
+        edges: %{a: #MapSet<[%{costs: 5, to: :b}]>, b: #MapSet<[%{costs: 5, to: :a}, %{costs: 5, to: :c}]>, c: #MapSet<[%{costs: 5, to: :b}]>},
+        nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}, c: %{costs: 0, label: nil}}
+      }
+      iex> g = Graph.delete_edge(g, :b, :c)
+      %Graph {
+        edges: %{a: #MapSet<[%{costs: 5, to: :b}]>, b: #MapSet<[%{costs: 5, to: :a}]>, c: #MapSet<[]>},
+        nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}, c: %{costs: 0, label: nil}}
+      }
   """
   @spec delete_edge(t, node_id, node_id) :: t
   def delete_edge(%__MODULE__{edges: e} = g, from, to) do
@@ -114,8 +115,9 @@ defmodule Graph do
   Adds a node to the graph without any further info.
 
   ## Example
-  iex> g = Graph.new |> Graph.add_node(:a)
-  %Graph{edges: %{}, nodes: %{a: %{costs: 0, label: nil}}}
+
+      iex> g = Graph.new |> Graph.add_node(:a)
+      %Graph {edges: %{}, nodes: %{a: %{costs: 0, label: nil}}}
   """
   def add_node(%__MODULE__{nodes: n} = g, node) when is_atom(node) do
     case Map.get(n, node) do
@@ -130,8 +132,9 @@ defmodule Graph do
   Adds a node to the graph with the specified information.
 
   ## Example
-  iex> g = Graph.new |> Graph.add_node(:a, %{label: "This is a", costs: 2})
-  %Graph{edges: %{}, nodes: %{a: %{costs: 2, label: "This is a"}}}
+
+      iex> g = Graph.new |> Graph.add_node(:a, %{label: "This is a", costs: 2})
+      %Graph {edges: %{}, nodes: %{a: %{costs: 2, label: "This is a"}}}
   """
   def add_node(%__MODULE__{nodes: n} = g, node, opts) when is_atom(node) and is_map(opts) do
     %__MODULE__{g | nodes: Map.put(n, node, %{label: Map.get(opts, :label), costs: Map.get(opts, :costs)})}
@@ -144,15 +147,17 @@ defmodule Graph do
   @doc"""
   Find the shortest path from a to b in the given graph.
 
-  iex> g = Graph.new |>
-  ...> Graph.add_edge(:s, :a, 3)  |>
-  ...> Graph.add_edge(:a, :b, 5)  |>
-  ...> Graph.add_edge(:b, :c, 10) |>
-  ...> Graph.add_edge(:c, :d, 3)  |>
-  ...> Graph.add_edge(:d, :e, 4)  |>
-  ...> Graph.add_edge(:b, :e, 5)  |>
-  ...> Graph.shortest_path(:s, :e)
-  [:s, :a, :b, :e]
+  ## Example
+
+      iex> g = Graph.new |>
+      ...> Graph.add_edge(:s, :a, 3)  |>
+      ...> Graph.add_edge(:a, :b, 5)  |>
+      ...> Graph.add_edge(:b, :c, 10) |>
+      ...> Graph.add_edge(:c, :d, 3)  |>
+      ...> Graph.add_edge(:d, :e, 4)  |>
+      ...> Graph.add_edge(:b, :e, 5)  |>
+      ...> Graph.shortest_path(:s, :e)
+      [:s, :a, :b, :e]
   """
   def shortest_path(%__MODULE__{} = g, from, to) when is_atom(from) and is_atom(to) do
     processed = %{}

@@ -16,8 +16,6 @@ defmodule Graph do
   - `edges` is a `Map` that has the node_id (atom) as a key and a `MapSet` as value. The `MapSet` contains `Maps` which store the information of the `edge`. The key `to` points to the `node` the adge is connecting and the key `costs` points to the assigned costs of the edge.
   """
 
-  require Logger
-
   defstruct nodes: %{}, edges: %{}
 
   @type node_id :: atom
@@ -177,7 +175,7 @@ defmodule Graph do
       try do
         do_shortest_path(g, from, to, pq, processed)
       rescue
-        FunctionClauseError -> Logger.error "Could not find path from #{from} to #{to}!!"
+        []
       end
     end
   end

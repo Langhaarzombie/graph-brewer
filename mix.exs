@@ -24,7 +24,7 @@ defmodule Graph.Mixfile do
   defp package do
     [file: ["lib", "mix.exs", "README.md", "LICENSE"],
      maintainers: ["Maximilian Meyer-Mölleringhof"],
-     license: ["MIT"],
+     licenses: ["MIT"],
      links: %{GitHub: "https://github.com/Langhaarzombie/graph-brewer"}]
   end
 

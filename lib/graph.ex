@@ -22,8 +22,9 @@ defmodule Graph do
   @type costs :: non_neg_integer
   @type label :: term
   @type edge_info :: %{to: node_id, costs: costs}
+  @type node_info :: %{label: label, costs: costs}
   @type t :: %__MODULE__{
-    nodes: %{node_id => %{label: label, costs: costs}},
+    nodes: %{node_id => node_info},
     edges: %{node_id => MapSet.t(edge_info)}
   }
 
@@ -35,6 +36,7 @@ defmodule Graph do
 
   @doc"""
   Adds an edge to the given graph from a to b & b to a and assigns the according costs. If the nodes a and / or b do not exist they are created (costs and label of these nodes is set to nil).
+  If there are no costs set, the default value of 1 will be assigned.
 
   ## Example
 
@@ -45,7 +47,7 @@ defmodule Graph do
       }
   """
   @spec add_edge(t, node_id, node_id, costs) :: t
-  def add_edge(%__MODULE__{edges: e} = g, from, to, costs) when is_atom(from) and is_atom(to) do
+  def add_edge(%__MODULE__{edges: e} = g, from, to, costs \\ 1) when is_atom(from) and is_atom(to) do
     g = g
       |> add_node(from)
       |> add_node(to)
@@ -84,10 +86,8 @@ defmodule Graph do
   """
   @spec delete_edge(t, node_id, node_id) :: t
   def delete_edge(%__MODULE__{edges: e} = g, from, to) do
-    with  fe <- Map.get(e, from),
-          te <- Map.get(e, to) do
-          #g = %__MODULE__{g | edges: %{from => MapSet.delete(ef, do_delete_edge(MapSet.to_list(ef), to))}}
-          #%__MODULE__{g | edges: MapSet.delete(tf, do_delete_edge(MapSet.to_list(tf), from))}}
+    with fe <- Map.get(e, from),
+         te <- Map.get(e, to) do
       fe_new = MapSet.delete(fe, find_edge(MapSet.to_list(fe), to))
       te_new = MapSet.delete(te, find_edge(MapSet.to_list(te), from))
 
@@ -119,6 +119,7 @@ defmodule Graph do
       iex> g = Graph.new |> Graph.add_node(:a)
       %Graph {edges: %{}, nodes: %{a: %{costs: 0, label: nil}}}
   """
+  @spec add_node(t, node_id) :: t
   def add_node(%__MODULE__{nodes: n} = g, node) when is_atom(node) do
     case Map.get(n, node) do
       nil ->
@@ -136,12 +137,104 @@ defmodule Graph do
       iex> g = Graph.new |> Graph.add_node(:a, %{label: "This is a", costs: 2})
       %Graph {edges: %{}, nodes: %{a: %{costs: 2, label: "This is a"}}}
   """
+  @spec add_node(t, node_id, node_info) :: t
   def add_node(%__MODULE__{nodes: n} = g, node, opts) when is_atom(node) and is_map(opts) do
     %__MODULE__{g | nodes: Map.put(n, node, %{label: Map.get(opts, :label), costs: Map.get(opts, :costs)})}
   end
 
-  def delete_node(%__MODULE__{nodes: n} = g, node) when is_atom(node) do
-    %__MODULE__{g | nodes: Map.delete(n, node)}
+  @doc"""
+  Deletes a given node plus the edges it is involved in.
+
+  ## Example
+
+      iex> g = Graph.new |> Graph.add_node(:a) |> Graph.add_node(:b) |> Graph.add_edge(:a, :b)
+      %Graph {
+        edges: %{a: #MapSet<[%{costs: 1, to: :b}]>, b: #MapSet<[%{costs: 1, to: :a}]>},
+        nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}}
+      }
+      iex> g = Graph.delete_node(g, :b)
+      %Graph{edges: %{a: #MapSet<[]>}, nodes: %{a: %{costs: 0, label: nil}}}
+
+  """
+  @spec delete_node(t, node_id) :: t
+  def delete_node(%__MODULE__{} = g, node) when is_atom(node) do
+    res = delete_from_neighbors(g, node)
+    %__MODULE__{res | nodes: Map.delete(res.nodes, node), edges: Map.delete(res.edges, node)}
+  end
+  def delete_from_neighbors(%__MODULE__{edges: e} = g, node) do
+    do_delete_from_neigbors(g, node, MapSet.to_list(Map.get(e, node)))
+  end
+  def do_delete_from_neigbors(g, from, [to | []]) do
+    delete_edge(g, from, Map.get(to, :to))
+  end
+  def do_delete_from_neigbors(g, from, [to | next]) do
+    g = delete_edge(g, from, Map.get(to, :to))
+    do_delete_from_neigbors(g, from, next)
+  end
+
+  @doc"""
+  Gets you the total costs of a path (edge + weight). If you enter a path is not complete (there is a hole) the method will return a negative value.
+
+  ## Example
+
+      iex> Graph.new |>
+      ...> Graph.add_edge(:s, :a, 3)  |>
+      ...> Graph.add_edge(:a, :b, 5)  |>
+      ...> Graph.add_edge(:b, :c, 10) |>
+      ...> Graph.add_edge(:c, :d, 3)  |>
+      ...> Graph.add_edge(:d, :e, 4)  |>
+      ...> Graph.add_edge(:b, :e, 5)  |>
+      ...> Graph.shortest_path(:s, :e) |>
+      ...> Graph.path_costs
+      13
+  """
+  @spec path_costs(t, []) :: costs
+  def path_costs(%__MODULE__{nodes: n, edges: e}, path) do
+    do_path_costs(n, e, path)
+  end
+  defp do_path_costs(n, _, [target | []]) do
+    Map.get(Map.get(n, target), :costs)
+  end
+  defp do_path_costs(n, e, [from | [to | _] = next]) do 
+    nodecosts = Map.get(Map.get(n, from), :costs)
+    edgecosts = get_edge_costs(e, from, to)
+    (nodecosts + edgecosts) + do_path_costs(n, e, next)
+  end
+  defp get_edge_costs(e, from, to) do
+    neig = MapSet.to_list(Map.get(e, from))
+    Map.get(check_neighbors(neig, to), :costs)
+  end
+  defp check_neighbors([], to) do
+    raise "The path provided is not actually a complete one. There are holes in it."
+  end
+  defp check_neighbors([h | t], to) do
+    if Map.get(h, :to) != to do
+      check_neighbors(t, to)
+    else
+      h
+    end
+  end
+
+  @doc"""
+  Returns the costs of the hop from node A to node B. Basically uses `path_costs` but with a path with just two nodes.
+  Same as `path_costs` it raises an exception if there is no connection.
+
+  ## Example
+  
+      iex> g = Graph.new |>
+      ...> Graph.add_edge(:s, :a, 3)  |>
+      ...> Graph.add_edge(:a, :b, 5)  |>
+      ...> Graph.add_edge(:b, :c, 10) |>
+      ...> Graph.add_edge(:c, :d, 3)  |>
+      ...> Graph.add_edge(:d, :e, 4)  |>
+      ...> Graph.add_edge(:b, :e, 5)
+      iex> Graph.hop_costs(g, :s, :a)
+      3
+
+  """
+  @spec hop_costs(t, node_id, node_id) :: costs
+  def hop_costs(%__MODULE__{} = g, from, to) do
+    path_costs(g, [from, to])
   end
 
   @doc"""
@@ -149,7 +242,7 @@ defmodule Graph do
 
   ## Example
 
-      iex> g = Graph.new |>
+      iex> Graph.new |>
       ...> Graph.add_edge(:s, :a, 3)  |>
       ...> Graph.add_edge(:a, :b, 5)  |>
       ...> Graph.add_edge(:b, :c, 10) |>
@@ -159,6 +252,7 @@ defmodule Graph do
       ...> Graph.shortest_path(:s, :e)
       [:s, :a, :b, :e]
   """
+  @spec shortest_path(t, node_id, node_id) :: [node_id, ...]
   def shortest_path(%__MODULE__{} = g, from, to) when is_atom(from) and is_atom(to) do
     processed = %{}
     pq = Priorityqueue.new
@@ -218,3 +312,4 @@ defmodule Graph do
     end
   end
  end
+

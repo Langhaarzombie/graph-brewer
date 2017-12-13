@@ -22,8 +22,9 @@ defmodule Graph do
   @type costs :: non_neg_integer
   @type label :: term
   @type edge_info :: %{to: node_id, costs: costs}
+  @type node_info :: %{label: label, costs: costs}
   @type t :: %__MODULE__{
-    nodes: %{node_id => %{label: label, costs: costs}},
+    nodes: %{node_id => node_info},
     edges: %{node_id => MapSet.t(edge_info)}
   }
 
@@ -85,8 +86,8 @@ defmodule Graph do
   """
   @spec delete_edge(t, node_id, node_id) :: t
   def delete_edge(%__MODULE__{edges: e} = g, from, to) do
-    with  fe <- Map.get(e, from),
-          te <- Map.get(e, to) do
+    with fe <- Map.get(e, from),
+         te <- Map.get(e, to) do
       fe_new = MapSet.delete(fe, find_edge(MapSet.to_list(fe), to))
       te_new = MapSet.delete(te, find_edge(MapSet.to_list(te), from))
 
@@ -118,6 +119,7 @@ defmodule Graph do
       iex> g = Graph.new |> Graph.add_node(:a)
       %Graph {edges: %{}, nodes: %{a: %{costs: 0, label: nil}}}
   """
+  @spec add_node(t, node_id) :: t
   def add_node(%__MODULE__{nodes: n} = g, node) when is_atom(node) do
     case Map.get(n, node) do
       nil ->
@@ -135,13 +137,39 @@ defmodule Graph do
       iex> g = Graph.new |> Graph.add_node(:a, %{label: "This is a", costs: 2})
       %Graph {edges: %{}, nodes: %{a: %{costs: 2, label: "This is a"}}}
   """
+  @spec add_node(t, node_id, node_info) :: t
   def add_node(%__MODULE__{nodes: n} = g, node, opts) when is_atom(node) and is_map(opts) do
     %__MODULE__{g | nodes: Map.put(n, node, %{label: Map.get(opts, :label), costs: Map.get(opts, :costs)})}
   end
 
-  # TODO add docs
-  def delete_node(%__MODULE__{nodes: n} = g, node) when is_atom(node) do
-    %__MODULE__{g | nodes: Map.delete(n, node)}
+  @doc"""
+  Deletes a given node plus the edges it is involved in.
+
+  ## Example
+
+      iex> g = Graph.new |> Graph.add_node(:a) |> Graph.add_node(:b) |> Graph.add_edge(:a, :b)
+      %Graph {
+        edges: %{a: #MapSet<[%{costs: 1, to: :b}]>, b: #MapSet<[%{costs: 1, to: :a}]>},
+        nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}}
+      }
+      iex> g = Graph.delete_node(g, :b)
+      %Graph{edges: %{a: #MapSet<[]>}, nodes: %{a: %{costs: 0, label: nil}}}
+
+  """
+  @spec delete_node(t, node_id) :: t
+  def delete_node(%__MODULE__{} = g, node) when is_atom(node) do
+    res = delete_from_neighbors(g, node)
+    %__MODULE__{res | nodes: Map.delete(res.nodes, node), edges: Map.delete(res.edges, node)}
+  end
+  def delete_from_neighbors(%__MODULE__{edges: e} = g, node) do
+    do_delete_from_neigbors(g, node, MapSet.to_list(Map.get(e, node)))
+  end
+  def do_delete_from_neigbors(g, from, [to | []]) do
+    delete_edge(g, from, Map.get(to, :to))
+  end
+  def do_delete_from_neigbors(g, from, [to | next]) do
+    g = delete_edge(g, from, Map.get(to, :to))
+    do_delete_from_neigbors(g, from, next)
   end
 
   @doc"""
@@ -160,6 +188,7 @@ defmodule Graph do
       ...> Graph.path_costs
       13
   """
+  @spec path_costs(t, []) :: costs
   def path_costs(%__MODULE__{nodes: n, edges: e}, path) do
     do_path_costs(n, e, path)
   end
@@ -203,7 +232,7 @@ defmodule Graph do
       3
 
   """
-  @spec(t, node_id, node_id)
+  @spec hop_costs(t, node_id, node_id) :: costs
   def hop_costs(%__MODULE__{} = g, from, to) do
     path_costs(g, [from, to])
   end
@@ -223,6 +252,7 @@ defmodule Graph do
       ...> Graph.shortest_path(:s, :e)
       [:s, :a, :b, :e]
   """
+  @spec shortest_path(t, node_id, node_id) :: [node_id, ...]
   def shortest_path(%__MODULE__{} = g, from, to) when is_atom(from) and is_atom(to) do
     processed = %{}
     pq = Priorityqueue.new

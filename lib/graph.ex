@@ -35,6 +35,7 @@ defmodule Graph do
 
   @doc"""
   Adds an edge to the given graph from a to b & b to a and assigns the according costs. If the nodes a and / or b do not exist they are created (costs and label of these nodes is set to nil).
+  If there are no costs set, the default value of 1 will be assigned.
 
   ## Example
 
@@ -45,7 +46,7 @@ defmodule Graph do
       }
   """
   @spec add_edge(t, node_id, node_id, costs) :: t
-  def add_edge(%__MODULE__{edges: e} = g, from, to, costs) when is_atom(from) and is_atom(to) do
+  def add_edge(%__MODULE__{edges: e} = g, from, to, costs \\ 1) when is_atom(from) and is_atom(to) do
     g = g
       |> add_node(from)
       |> add_node(to)
@@ -86,8 +87,6 @@ defmodule Graph do
   def delete_edge(%__MODULE__{edges: e} = g, from, to) do
     with  fe <- Map.get(e, from),
           te <- Map.get(e, to) do
-          #g = %__MODULE__{g | edges: %{from => MapSet.delete(ef, do_delete_edge(MapSet.to_list(ef), to))}}
-          #%__MODULE__{g | edges: MapSet.delete(tf, do_delete_edge(MapSet.to_list(tf), from))}}
       fe_new = MapSet.delete(fe, find_edge(MapSet.to_list(fe), to))
       te_new = MapSet.delete(te, find_edge(MapSet.to_list(te), from))
 
@@ -140,6 +139,7 @@ defmodule Graph do
     %__MODULE__{g | nodes: Map.put(n, node, %{label: Map.get(opts, :label), costs: Map.get(opts, :costs)})}
   end
 
+  // TODO add docs
   def delete_node(%__MODULE__{nodes: n} = g, node) when is_atom(node) do
     %__MODULE__{g | nodes: Map.delete(n, node)}
   end
@@ -218,3 +218,4 @@ defmodule Graph do
     end
   end
  end
+

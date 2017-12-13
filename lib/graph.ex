@@ -139,9 +139,73 @@ defmodule Graph do
     %__MODULE__{g | nodes: Map.put(n, node, %{label: Map.get(opts, :label), costs: Map.get(opts, :costs)})}
   end
 
-  // TODO add docs
+  # TODO add docs
   def delete_node(%__MODULE__{nodes: n} = g, node) when is_atom(node) do
     %__MODULE__{g | nodes: Map.delete(n, node)}
+  end
+
+  @doc"""
+  Gets you the total costs of a path (edge + weight). If you enter a path is not complete (there is a hole) the method will return a negative value.
+
+  ## Example
+
+      iex> Graph.new |>
+      ...> Graph.add_edge(:s, :a, 3)  |>
+      ...> Graph.add_edge(:a, :b, 5)  |>
+      ...> Graph.add_edge(:b, :c, 10) |>
+      ...> Graph.add_edge(:c, :d, 3)  |>
+      ...> Graph.add_edge(:d, :e, 4)  |>
+      ...> Graph.add_edge(:b, :e, 5)  |>
+      ...> Graph.shortest_path(:s, :e) |>
+      ...> Graph.path_costs
+      13
+  """
+  def path_costs(%__MODULE__{nodes: n, edges: e}, path) do
+    do_path_costs(n, e, path)
+  end
+  defp do_path_costs(n, _, [target | []]) do
+    Map.get(Map.get(n, target), :costs)
+  end
+  defp do_path_costs(n, e, [from | [to | _] = next]) do 
+    nodecosts = Map.get(Map.get(n, from), :costs)
+    edgecosts = get_edge_costs(e, from, to)
+    (nodecosts + edgecosts) + do_path_costs(n, e, next)
+  end
+  defp get_edge_costs(e, from, to) do
+    neig = MapSet.to_list(Map.get(e, from))
+    Map.get(check_neighbors(neig, to), :costs)
+  end
+  defp check_neighbors([], to) do
+    raise "The path provided is not actually a complete one. There are holes in it."
+  end
+  defp check_neighbors([h | t], to) do
+    if Map.get(h, :to) != to do
+      check_neighbors(t, to)
+    else
+      h
+    end
+  end
+
+  @doc"""
+  Returns the costs of the hop from node A to node B. Basically uses `path_costs` but with a path with just two nodes.
+  Same as `path_costs` it raises an exception if there is no connection.
+
+  ## Example
+  
+      iex> g = Graph.new |>
+      ...> Graph.add_edge(:s, :a, 3)  |>
+      ...> Graph.add_edge(:a, :b, 5)  |>
+      ...> Graph.add_edge(:b, :c, 10) |>
+      ...> Graph.add_edge(:c, :d, 3)  |>
+      ...> Graph.add_edge(:d, :e, 4)  |>
+      ...> Graph.add_edge(:b, :e, 5)
+      iex> Graph.hop_costs(g, :s, :a)
+      3
+
+  """
+  @spec(t, node_id, node_id)
+  def hop_costs(%__MODULE__{} = g, from, to) do
+    path_costs(g, [from, to])
   end
 
   @doc"""
@@ -149,7 +213,7 @@ defmodule Graph do
 
   ## Example
 
-      iex> g = Graph.new |>
+      iex> Graph.new |>
       ...> Graph.add_edge(:s, :a, 3)  |>
       ...> Graph.add_edge(:a, :b, 5)  |>
       ...> Graph.add_edge(:b, :c, 10) |>

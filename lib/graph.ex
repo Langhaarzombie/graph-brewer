@@ -161,13 +161,13 @@ defmodule Graph do
     res = delete_from_neighbors(g, node)
     %__MODULE__{res | nodes: Map.delete(res.nodes, node), edges: Map.delete(res.edges, node)}
   end
-  def delete_from_neighbors(%__MODULE__{edges: e} = g, node) do
+  defp delete_from_neighbors(%__MODULE__{edges: e} = g, node) do
     do_delete_from_neigbors(g, node, MapSet.to_list(Map.get(e, node)))
   end
-  def do_delete_from_neigbors(g, from, [to | []]) do
+  defp do_delete_from_neigbors(g, from, [to | []]) do
     delete_edge(g, from, Map.get(to, :to))
   end
-  def do_delete_from_neigbors(g, from, [to | next]) do
+  defp do_delete_from_neigbors(g, from, [to | next]) do
     g = delete_edge(g, from, Map.get(to, :to))
     do_delete_from_neigbors(g, from, next)
   end

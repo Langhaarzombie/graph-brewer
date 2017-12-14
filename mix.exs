@@ -4,7 +4,7 @@ defmodule Graph.Mixfile do
   def project do
     [
       app: :graphbrewer,
-      version: "0.1.1",
+      version: "0.1.2",
       elixir: "~> 1.5",
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
@@ -23,7 +23,7 @@ defmodule Graph.Mixfile do
   defp description, do: "A (working) graph library for Elixir"
   defp package do
     [file: ["lib", "mix.exs", "README.md", "LICENSE"],
-     maintainers: ["Maximilian Meyer-Mölleringhof"],
+     maintainers: ["Langhaarzombie"],
      licenses: ["MIT"],
      links: %{GitHub: "https://github.com/Langhaarzombie/graph-brewer"}]
   end

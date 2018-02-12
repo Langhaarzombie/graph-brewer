@@ -204,7 +204,7 @@ defmodule Graph do
     neig = MapSet.to_list(Map.get(e, from))
     Map.get(check_neighbors(neig, to), :costs)
   end
-  defp check_neighbors([], to) do
+  defp check_neighbors([], _to) do
     raise "The path provided is not actually a complete one. There are holes in it."
   end
   defp check_neighbors([h | t], to) do

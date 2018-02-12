@@ -69,6 +69,34 @@ defmodule Graph do
   end
 
   @doc"""
+  Gets you the edge connecting two nodes.
+
+  ## Example
+
+      iex> g = Graph.new |> Graph.add_edge(:a, :b, 3)
+      %Graph{
+        edges: %{a: #MapSet<[%{costs: 4, to: :b}]>, b: #MapSet<[%{costs: 4, to: :a}]>},
+        nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}}
+      }
+      iex> Graph.get_edge(g, :a, :b)
+      %{costs: 4, from: :a, to: :b}
+      iex> Graph.get_edge(g, :a, :s)
+      nil
+  """
+  @spec get_edge(t, node_id, node_id) :: %{from: node_id, to: node_id, costs: costs}
+  def get_edge(%__MODULE__{edges: e}, from, to) do
+    with fedges = Map.get(e, from) do
+      result = case find_edge(MapSet.to_list(fedges), to) do
+        nil ->
+          nil
+        edge ->  
+          %{from: from, to: to, costs: Map.get(edge, :costs)}
+      end
+      result
+    end
+  end
+
+  @doc"""
   Deletes an the edge that goes from a to b. The edge is only deleted if it really exists. Isolated nodes are of course not deleted.
 
   ## Example
@@ -100,9 +128,7 @@ defmodule Graph do
       %__MODULE__{g | edges: e}
     end
   end
-  defp find_edge([], _) do
-    nil
-  end
+  defp find_edge([], _), do: nil
   defp find_edge([h | t], to) do
     if Map.get(h, :to) == to do
       h
@@ -140,6 +166,21 @@ defmodule Graph do
   @spec add_node(t, node_id, node_info) :: t
   def add_node(%__MODULE__{nodes: n} = g, node, opts) when is_atom(node) and is_map(opts) do
     %__MODULE__{g | nodes: Map.put(n, node, %{label: Map.get(opts, :label), costs: Map.get(opts, :costs)})}
+  end
+
+  @doc"""
+  Gets node info for the ID.
+
+  ## Example
+  
+      iex> g = Graph.new |> Graph.add_node(:a, %{label: "This is a", costs: 4})
+      %Graph{edges: %{}, nodes: %{a: %{costs: 4, label: "This is a"}}}
+      iex> Graph.get_node(g, :a)
+      %{costs: 4, label: "This is a"}
+  """
+  @spec get_node(t, node_id) :: node_info
+  def get_node(%__MODULE__{nodes: n}, id) do
+    Map.get(n, id)
   end
 
   @doc"""

@@ -6,11 +6,12 @@ defmodule Priorityqueue do
   defstruct entries: %{}
 
   @type key :: atom
+  @type node_id :: atom
   @type path_costs :: non_neg_integer
   @type heuristic_costs :: non_neg_integer
-  @type total_costs :: non_neg_integer
+  @type to_costs :: non_neg_integer
   @type t :: %__MODULE__{
-    entries: %{key => %{pcosts: path_costs, hcosts: heuristic_costs, tcosts: total_costs}}
+    entries: %{key => %{pcosts: path_costs, hcosts: heuristic_costs, tcosts: to_costs, from: node_id}}
   }
 
   @doc"""

@@ -40,10 +40,15 @@ defmodule Graph do
 
   ## Example
 
-      iex> g = Graph.new |> Graph.add_edge(:a, :b, 5)
+  iex> g = Graph.new |> Graph.add_edge(:a, :b, 5) |> Graph.add_edge(:b, :c, 3)
       %Graph {
-        edges: %{a: %MapSet<[%{costs: 5, to: :b}]>, b: %MapSet<[%{costs: 5, to: :a}]>},
-        nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}}
+      edges: %{a: %MapSet<[%{costs: 5, to: :b}]>, b: %MapSet<[%{costs: 5, to: :a}, %{costs: 3, to: :c}]>, c: %MapSet<[%{costs: 3, to: :b}]>},
+        nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}, c: %{costs: 0, label: nil}}
+      }
+  iex> Graph.add_edge(:b, :c, 9)
+      %Graph {
+        edges: %{a: %MapSet<[%{costs: 5, to: :b}]>, b: %MapSet<[%{costs: 5, to: :a}, %{costs: 9, to: :c}]>, c: %MapSet<[%{costs: 9, to: :b}]>},
+        nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}, c: %{costs: 0, label: nil}}
       }
   """
   @spec add_edge(t, node_id, node_id, costs) :: t
@@ -54,17 +59,27 @@ defmodule Graph do
 
     g = case Map.get(e, from) do
       nil ->
-        %__MODULE__{g | edges: Map.put(e, from, MapSet.put(MapSet.new, %{to: to, costs: costs}))}
-      _ ->
-        %__MODULE__{g | edges: Map.put(e, from, MapSet.put(Map.get(e, from), %{to: to, costs: costs}))}
+        %__MODULE__{g | edges: Map.put(e, from, MapSet.new([%{to: to, costs: costs}]))}
+      mapset ->
+        new_edges = MapSet.new(mapset, fn                 
+          %{to: ^to} = old -> %{old | :costs => costs}
+          %{to: ^to} = old -> Map.put(old, :costs, costs)
+          any -> any
+        end)
+        %__MODULE__{g | edges: Map.put(e, from, new_edges)}
     end
 
     e = g.edges
     case Map.get(e, to) do
       nil ->
-        %__MODULE__{g | edges: Map.put(e, to, MapSet.put(MapSet.new, %{to: from, costs: costs}))}
-      _ ->
-        %__MODULE__{g | edges: Map.put(e, to, MapSet.put(Map.get(e, to), %{to: from, costs: costs}))}
+        %__MODULE__{g | edges: Map.put(e, to, MapSet.new([%{to: to, costs: costs}]))}
+      mapset ->
+        new_edges = MapSet.new(mapset, fn                 
+          %{to: ^from} = old -> %{old | :costs => costs}
+          %{to: ^from} = old -> Map.put(old, :costs, costs)
+          any -> any
+        end)
+        %__MODULE__{g | edges: Map.put(e, to, new_edges)}
     end
   end
 

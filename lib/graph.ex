@@ -40,16 +40,16 @@ defmodule Graph do
 
   ## Example
 
-  iex> g = Graph.new |> Graph.add_edge(:a, :b, 5) |> Graph.add_edge(:b, :c, 3)
-      %Graph {
+    iex> g = Graph.new |> Graph.add_edge(:a, :b, 5) |> Graph.add_edge(:b, :c, 3)
+    %Graph {
       edges: %{a: %MapSet<[%{costs: 5, to: :b}]>, b: %MapSet<[%{costs: 5, to: :a}, %{costs: 3, to: :c}]>, c: %MapSet<[%{costs: 3, to: :b}]>},
-        nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}, c: %{costs: 0, label: nil}}
-      }
-  iex> Graph.add_edge(:b, :c, 9)
-      %Graph {
-        edges: %{a: %MapSet<[%{costs: 5, to: :b}]>, b: %MapSet<[%{costs: 5, to: :a}, %{costs: 9, to: :c}]>, c: %MapSet<[%{costs: 9, to: :b}]>},
-        nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}, c: %{costs: 0, label: nil}}
-      }
+      nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}, c: %{costs: 0, label: nil}}
+    }
+    iex> Graph.add_edge(g, :b, :c, 9)
+    %Graph {
+      edges: %{a: %MapSet<[%{costs: 5, to: :b}]>, b: %MapSet<[%{costs: 5, to: :a}, %{costs: 9, to: :c}]>, c: %MapSet<[%{costs: 9, to: :b}]>},
+      nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}, c: %{costs: 0, label: nil}}
+    }
   """
   @spec add_edge(t, node_id, node_id, costs) :: t
   def add_edge(%__MODULE__{edges: e} = g, from, to, costs \\ 1) when is_atom(from) and is_atom(to) do
@@ -86,8 +86,8 @@ defmodule Graph do
   end
 
   # TODO duplicate
-  def edge_exists([], _to), do: false
-  def edge_exists([h | t], to) do
+  defp edge_exists([], _to), do: false
+  defp edge_exists([h | t], to) do
     cond do
       h[:to] == to ->
         h
@@ -103,7 +103,7 @@ defmodule Graph do
 
       iex> g = Graph.new |> Graph.add_edge(:a, :b, 3)
       %Graph{
-        edges: %{a: #MapSet<[%{costs: 4, to: :b}]>, b: #MapSet<[%{costs: 4, to: :a}]>},
+        edges: %{a: %MapSet<[%{costs: 4, to: :b}]>, b: %MapSet<[%{costs: 4, to: :a}]>},
         nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}}
       }
       iex> Graph.get_edge(g, :a, :b)
@@ -131,12 +131,12 @@ defmodule Graph do
 
       iex> g = Graph.new |> Graph.add_edge(:a, :b, 5) |> Graph.add_edge(:b, :c, 5)
       %Graph {
-        edges: %{a: #MapSet<[%{costs: 5, to: :b}]>, b: #MapSet<[%{costs: 5, to: :a}, %{costs: 5, to: :c}]>, c: #MapSet<[%{costs: 5, to: :b}]>},
+        edges: %{a: %MapSet<[%{costs: 5, to: :b}]>, b: %MapSet<[%{costs: 5, to: :a}, %{costs: 5, to: :c}]>, c: %MapSet<[%{costs: 5, to: :b}]>},
         nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}, c: %{costs: 0, label: nil}}
       }
       iex> g = Graph.delete_edge(g, :b, :c)
       %Graph {
-        edges: %{a: #MapSet<[%{costs: 5, to: :b}]>, b: #MapSet<[%{costs: 5, to: :a}]>, c: #MapSet<[]>},
+        edges: %{a: %MapSet<[%{costs: 5, to: :b}]>, b: %MapSet<[%{costs: 5, to: :a}]>, c: %MapSet<[]>},
         nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}, c: %{costs: 0, label: nil}}
       }
   """
@@ -218,11 +218,11 @@ defmodule Graph do
 
       iex> g = Graph.new |> Graph.add_node(:a) |> Graph.add_node(:b) |> Graph.add_edge(:a, :b)
       %Graph {
-        edges: %{a: #MapSet<[%{costs: 1, to: :b}]>, b: #MapSet<[%{costs: 1, to: :a}]>},
+        edges: %{a: %MapSet<[%{costs: 1, to: :b}]>, b: %MapSet<[%{costs: 1, to: :a}]>},
         nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil}}
       }
       iex> g = Graph.delete_node(g, :b)
-      %Graph{edges: %{a: #MapSet<[]>}, nodes: %{a: %{costs: 0, label: nil}}}
+      %Graph{edges: %{a: %MapSet<[]>}, nodes: %{a: %{costs: 0, label: nil}}}
 
   """
   @spec delete_node(t, node_id) :: t
@@ -246,19 +246,30 @@ defmodule Graph do
 
   ## Example
 
-      iex> Graph.new |>
+      iex> g = Graph.new |>
       ...> Graph.add_edge(:s, :a, 3)  |>
       ...> Graph.add_edge(:a, :b, 5)  |>
       ...> Graph.add_edge(:b, :c, 10) |>
       ...> Graph.add_edge(:c, :d, 3)  |>
       ...> Graph.add_edge(:d, :e, 4)  |>
-      ...> Graph.add_edge(:b, :e, 5)  |>
-      ...> Graph.shortest_path(:s, :e) |>
-      ...> Graph.path_costs
+      ...> Graph.add_edge(:b, :e, 5)
+      %Graph {
+        edges: %{a: %MapSet<[%{costs: 3, to: :s}, %{costs: 5, to: :b}]>,
+                 b: %MapSet<[%{costs: 5, to: :a}, %{costs: 5, to: :e}, %{costs: 10, to: :c}]>,
+                 c: %MapSet<[%{costs: 3, to: :d}, %{costs: 10, to: :b}]>,
+                 d: %MapSet<[%{costs: 3, to: :c}, %{costs: 4, to: :e}]>,
+                 e: %MapSet<[%{costs: 4, to: :d}, %{costs: 5, to: :b}]>,
+                 s: %MapSet<[%{costs: 3, to: :a}]>},
+        nodes: %{a: %{costs: 0, label: nil}, b: %{costs: 0, label: nil},
+                 c: %{costs: 0, label: nil}, d: %{costs: 0, label: nil},
+                 e: %{costs: 0, label: nil}, s: %{costs: 0, label: nil}}
+      }
+      iex> Graph.shortest_path(g, :s, :e) |>
+      ...> (&Graph.path_costs(g, &1)).()
       13
   """
   @spec path_costs(t, []) :: costs
-  def path_costs(%__MODULE__{nodes: n, edges: e}, path) do
+  def path_costs(%__MODULE__{nodes: n, edges: e}, path) when is_list(path) do
     do_path_costs(n, e, path)
   end
   defp do_path_costs(n, _, [target | []]) do

@@ -61,25 +61,38 @@ defmodule Graph do
       nil ->
         %__MODULE__{g | edges: Map.put(e, from, MapSet.new([%{to: to, costs: costs}]))}
       mapset ->
-        new_edges = MapSet.new(mapset, fn                 
-          %{to: ^to} = old -> %{old | :costs => costs}
-          %{to: ^to} = old -> Map.put(old, :costs, costs)
-          any -> any
-        end)
-        %__MODULE__{g | edges: Map.put(e, from, new_edges)}
+        edges = case edge_exists(MapSet.to_list(mapset), to) do
+          %{to: ^to, costs: _} = edge ->
+            MapSet.delete(mapset, edge) |> MapSet.put(%{to: to, costs: costs})
+          false ->
+            ([%{to: to, costs: costs}] ++ MapSet.to_list(mapset)) |> MapSet.new
+        end
+        %__MODULE__{g | edges: Map.put(e, from, edges)}
     end
 
     e = g.edges
     case Map.get(e, to) do
       nil ->
-        %__MODULE__{g | edges: Map.put(e, to, MapSet.new([%{to: to, costs: costs}]))}
+        %__MODULE__{g | edges: Map.put(e, to, MapSet.new([%{to: from, costs: costs}]))}
       mapset ->
-        new_edges = MapSet.new(mapset, fn                 
-          %{to: ^from} = old -> %{old | :costs => costs}
-          %{to: ^from} = old -> Map.put(old, :costs, costs)
-          any -> any
-        end)
-        %__MODULE__{g | edges: Map.put(e, to, new_edges)}
+        edges = case edge_exists(MapSet.to_list(mapset), from) do
+          %{to: ^from, costs: _} = edge ->
+            MapSet.delete(mapset, edge) |> MapSet.put(%{to: from, costs: costs})
+          false ->
+            ([%{to: from, costs: costs}] ++ MapSet.to_list(mapset)) |> MapSet.new
+        end
+        %__MODULE__{g | edges: Map.put(e, to, edges)}
+    end
+  end
+
+  # TODO duplicate
+  def edge_exists([], _to), do: false
+  def edge_exists([h | t], to) do
+    cond do
+      h[:to] == to ->
+        h
+      true ->
+        edge_exists(t, to)
     end
   end
 

@@ -337,7 +337,11 @@ defmodule Graph do
     processed = %{}
     pq = Priorityqueue.new
       |> Priorityqueue.push(from, %{costs_to: 0, costs_hop: 0, costs_heur: 0, from: nil})
-    do_shortest_path(g, from, to, pq, processed)
+    try do
+      {:ok, do_shortest_path(g, from, to, pq, processed)}
+    rescue
+      e in FunctionClauseError -> {:err, "Route unable to be processed"}
+    end
   end
   defp do_shortest_path(%__MODULE__{edges: e} = g, from, to, pq, processed) do
     pq = case Priorityqueue.pop(pq) do

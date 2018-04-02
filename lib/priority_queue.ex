@@ -34,7 +34,7 @@ defmodule Priorityqueue do
       %Priorityqueue {entries: %{a: %{costs_heur: 4, costs_hop: 3, costs_to: 15, from: :s}}}
   """
   @spec push(t, key, %{costs_to: path_costs, costs_hop: path_costs, costs_heur: heuristic_costs, from: key}) :: t
-  def push(%__MODULE__{entries: e} = pq, node, %{costs_to: cto, costs_hop: _, costs_heur: _, from: from} = prop) do
+  def push(%__MODULE__{entries: e} = pq, node, %{costs_to: cto, costs_hop: _, costs_heur: _, from: _} = prop) do
     case Map.get(e, node) do
       nil ->
         %__MODULE__{pq | entries: Map.put(e, node, prop)}

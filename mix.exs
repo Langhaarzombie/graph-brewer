@@ -5,7 +5,7 @@ defmodule Graph.Mixfile do
     [
       app: :graphbrewer,
       version: "0.1.5",
-      elixir: "~> 1.6.1",
+      elixir: "~> 1.6.4",
       build_embedded: Mix.env == :prod,
       start_permanent: Mix.env == :prod,
       deps: deps(),
@@ -17,7 +17,7 @@ defmodule Graph.Mixfile do
   def application, do: [extra_applications: []]
 
   defp deps do
-    [{:ex_doc, "~> 0.16", only: :dev}]
+    [{:ex_doc, "~> 0.18.3", only: :dev}]
   end
 
   defp description, do: "A (working) graph library for Elixir"

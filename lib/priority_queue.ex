@@ -5,12 +5,12 @@ defmodule Priorityqueue do
   """
   defstruct entries: %{}
 
-  @type key :: atom
-  @type node_id :: atom
-  @type path_costs :: non_neg_integer
+  @type key             :: atom
+  @type node_id         :: atom
+  @type path_costs      :: non_neg_integer
   @type heuristic_costs :: non_neg_integer
-  @type to_costs :: non_neg_integer
-  @type t :: %__MODULE__{
+  @type to_costs        :: non_neg_integer
+  @type t               :: %__MODULE__{
     entries: %{key => %{pcosts: path_costs, hcosts: heuristic_costs, tcosts: to_costs, from: node_id}}
   }
 
@@ -34,7 +34,7 @@ defmodule Priorityqueue do
       %Priorityqueue {entries: %{a: %{costs_heur: 4, costs_hop: 3, costs_to: 15, from: :s}}}
   """
   @spec push(t, key, %{costs_to: path_costs, costs_hop: path_costs, costs_heur: heuristic_costs, from: key}) :: t
-  def push(%__MODULE__{entries: e} = pq, node, %{costs_to: cto, costs_hop: _, costs_heur: _, from: from} = prop) when is_atom(node) and is_atom(from) do
+  def push(%__MODULE__{entries: e} = pq, node, %{costs_to: cto, costs_hop: _, costs_heur: _, from: from} = prop) do
     case Map.get(e, node) do
       nil ->
         %__MODULE__{pq | entries: Map.put(e, node, prop)}
@@ -58,24 +58,9 @@ defmodule Priorityqueue do
   """
   @spec pop(t) :: {t, key, %{costs_heur: heuristic_costs, costs_hop: path_costs, costs_to: path_costs, from: key}}
   def pop(%__MODULE__{entries: e} = pq) do
-    {skey, _} = find_smallest(pq, Map.keys(e), %{key: nil, value: 2092013})
+    {skey, _} = Map.to_list(e) |> Enum.min_by(fn(x) -> elem(x, 1)[:costs_to] + elem(x, 1)[:costs_heur] end)
     pq = %__MODULE__{pq | entries: Map.delete(e, skey)}
     {pq, skey, Map.get(e, skey)}
-  end
-  defp find_smallest(%__MODULE__{}, [], smallest) do
-    {Map.get(smallest, :key), Map.get(smallest, :value)}
-  end
-  defp find_smallest(%__MODULE__{entries: e} = pq, [h | t], smallest) do
-    with entry <- Map.get(e, h) do
-      ct = Map.get(entry, :costs_to)
-      ch = Map.get(entry, :costs_heur)
-      total = ct + ch
-      if total < Map.get(smallest, :value) do
-        find_smallest(pq, t, %{key: h, value: total})
-      else
-        find_smallest(pq, t, smallest)
-      end
-    end
   end
 end
 

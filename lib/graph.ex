@@ -13,7 +13,7 @@ defmodule Graph do
   The `Graph` module is strucutred like so:
 
   - `nodes` is a `Map` that has the node_id (atom) as a key and another `Map` as value. This `Map` conatins `label` and `costs` as keys that refer to the corresponding value.
-  - `edges` is a `Map` that has the node_id (atom) as a key and a `MapSet` as value. The `MapSet` contains `Maps` which store the information of the `edge`. The key `to` points to the `node` the adge is connecting and the key `costs` points to the assigned costs of the edge.
+  - `edges` is a `Map` that has the node_id (atom) as a key and another `Map` as value. The key refers to the starting node of the edge and all nodes stored in the second map refer to the edge's end. Additionally, the second map stores the edge's weight mapped to the end node.
   """
 
   defstruct nodes: %{}, edges: %{}
@@ -36,7 +36,7 @@ defmodule Graph do
 
   @doc~S"""
   Adds an edge to the given graph from a to b & b to a and assigns the according costs. If the nodes a and / or b do not exist they are created (costs and label of these nodes is set to nil).
-  If there are no costs set, the default value of 1 will be assigned.
+  If there are no costs set, the default value of 0 will be assigned.
 
   ## Example
 
@@ -78,7 +78,7 @@ defmodule Graph do
   end
 
   @doc~S"""
-  Gets you the edge connecting two nodes.
+  Gets the edge connecting two nodes. Returns nil if there is no connection.
 
   ## Example
 
@@ -108,7 +108,7 @@ defmodule Graph do
   end
 
   @doc~S"""
-  Deletes an the edge that goes from a to b. The edge is only deleted if it really exists. Isolated nodes are of course not deleted.
+  Deletes an the edge that goes from a to b. The edge is only deleted if it really exists.
 
   ## Example
 
@@ -164,7 +164,7 @@ defmodule Graph do
   end
 
   @doc~S"""
-  Gets node info for the ID.
+  Gets node info for the ID. Unlike other functions, this returns the information as a map.
 
   ## Example
   

@@ -40,24 +40,24 @@ defmodule Graph do
 
   ## Example
 
-    iex> g = Graph.new |> Graph.add_edge(:a, :b, 5) |> Graph.add_edge(:b, :c, 3)
-    %Graph{
-      edges: %{a: %{b: 5}, b: %{a: 5, c: 3}, c: %{b: 3}},
-      nodes: %{
-        a: %{costs: 0, label: nil},
-        b: %{costs: 0, label: nil},
-        c: %{costs: 0, label: nil}
+      iex> g = Graph.new |> Graph.add_edge(:a, :b, 5) |> Graph.add_edge(:b, :c, 3)
+      %Graph{
+        edges: %{a: %{b: 5}, b: %{a: 5, c: 3}, c: %{b: 3}},
+        nodes: %{
+          a: %{costs: 0, label: nil},
+          b: %{costs: 0, label: nil},
+          c: %{costs: 0, label: nil}
+        }
       }
-    }
-    iex> Graph.add_edge(g, :b, :c, 9)
-    %Graph{
-      edges: %{a: %{b: 5}, b: %{a: 5, c: 9}, c: %{b: 9}},
-      nodes: %{
-        a: %{costs: 0, label: nil},
-        b: %{costs: 0, label: nil},
-        c: %{costs: 0, label: nil}
+      iex> Graph.add_edge(g, :b, :c, 9)
+      %Graph{
+        edges: %{a: %{b: 5}, b: %{a: 5, c: 9}, c: %{b: 9}},
+        nodes: %{
+          a: %{costs: 0, label: nil},
+          b: %{costs: 0, label: nil},
+          c: %{costs: 0, label: nil}
+        }
       }
-    }
   """
   @spec add_edge(t, node_id, node_id, costs) :: t
   def add_edge(%__MODULE__{edges: e} = g, from, to, costs \\ 1) when is_atom(from) and is_atom(to) do
@@ -133,8 +133,8 @@ defmodule Graph do
   """
   @spec delete_edge(t, node_id, node_id) :: t
   def delete_edge(%__MODULE__{} = g, from, to) do
-    g = if has_edge?(g, from, to), do: delete_edge!(g, from, to)
-    g = if has_edge?(g, to, from), do: delete_edge!(g, to, from)
+    g = if has_edge?(g, from, to), do: delete_edge!(g, from, to), else: g
+    g = if has_edge?(g, to, from), do: delete_edge!(g, to, from), else: g
     g
   end
   def delete_edge!(%__MODULE__{edges: e} = g, from, to) do
@@ -249,8 +249,8 @@ defmodule Graph do
   @spec path_costs(t, []) :: costs
   def path_costs(%__MODULE__{} = g, path), do: do_path_costs(g, path)
   def path_costs(path, %__MODULE__{} = g), do: path_costs(g, path)
-  def do_path_costs(_g, path) when length(path) == 1, do: 0
-  def do_path_costs(%__MODULE__{} = g, [f | [t | _] = n]) do
+  defp do_path_costs(_g, path) when length(path) == 1, do: 0
+  defp do_path_costs(%__MODULE__{} = g, [f | [t | _] = n]) do
     case do_path_costs(g, n) do
       nil -> nil
       c ->

@@ -133,8 +133,8 @@ defmodule Graph do
   """
   @spec delete_edge(t, node_id, node_id) :: t
   def delete_edge(%__MODULE__{} = g, from, to) do
-    g = if has_edge?(g, from, to), do: delete_edge!(g, from, to)
-    g = if has_edge?(g, to, from), do: delete_edge!(g, to, from)
+    g = if has_edge?(g, from, to), do: delete_edge!(g, from, to), else: g
+    g = if has_edge?(g, to, from), do: delete_edge!(g, to, from), else: g
     g
   end
   def delete_edge!(%__MODULE__{edges: e} = g, from, to) do

@@ -58,9 +58,13 @@ defmodule Priorityqueue do
   """
   @spec pop(t) :: {t, key, %{costs_heur: heuristic_costs, costs_hop: path_costs, costs_to: path_costs, from: key}}
   def pop(%__MODULE__{entries: e} = pq) do
-    {skey, _} = Map.to_list(e) |> Enum.min_by(fn(x) -> elem(x, 1)[:costs_to] + elem(x, 1)[:costs_heur] end)
-    pq = %__MODULE__{pq | entries: Map.delete(e, skey)}
-    {pq, skey, Map.get(e, skey)}
+    case Map.to_list(e) do
+      [] -> nil
+      list ->
+        {skey, _} = Enum.min_by(list, fn(x) -> elem(x, 1)[:costs_to] + elem(x, 1)[:costs_heur] end)
+        pq = %__MODULE__{pq | entries: Map.delete(e, skey)}
+        {pq, skey, Map.get(e, skey)}
+    end
   end
 end
 

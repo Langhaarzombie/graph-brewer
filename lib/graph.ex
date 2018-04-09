@@ -309,6 +309,7 @@ defmodule Graph do
   end
   defp do_shortest_path(%__MODULE__{} = g, from, to, pq, processed) do
     pq = case Priorityqueue.pop(pq) do
+      nil -> []
       {_, ^to, data} ->
         Map.put(processed, to, data) |> construct_path(from, to)
       {pq, id, data} ->
@@ -316,7 +317,6 @@ defmodule Graph do
         neighbors = Enum.filter(get_neighbors(g, id),
                                 fn(x) -> !(Enum.member?(Map.keys(processed), x)) end)
         insert_pq(g, pq, neighbors, Map.merge(%{key: id}, data))
-      nil -> []
     end
     if is_list(pq) do
       Enum.reverse(pq)

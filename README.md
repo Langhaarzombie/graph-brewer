@@ -11,7 +11,7 @@ by adding `graphbrewer` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:graphbrewer, "~> 0.1.7"}
+    {:graphbrewer, "~> 0.1.8"}
   ]
 end
 ```
